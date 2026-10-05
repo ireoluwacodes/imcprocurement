@@ -1,29 +1,28 @@
-# Welcome to your Lovable project
+# Integra Mission Critical Procurement
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+Purchase requests, equipment substitutions and material transfers in one procurement system.
+See [roadmap.md](roadmap.md) for what's built and what's next.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Needs [Bun](https://bun.sh) and a `.env` with the Supabase project settings:
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=   # server functions only
 ```
+
+```sh
+bun install
+bun run dev      # http://localhost:8080
+bun run build    # Cloudflare Workers output in .output/
+```
+
+Database migrations live in `supabase/migrations`.
 
 ## Built with
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+TanStack Start, React, TypeScript, Tailwind CSS, Supabase.

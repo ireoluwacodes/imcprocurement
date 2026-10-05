@@ -17,7 +17,7 @@ import {
   Menu,
   Boxes,
 } from "lucide-react";
-import logo from "@/assets/integra-mission-critical-logo.webp.asset.json";
+import logo from "@/assets/integra-mission-critical-logo.webp";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile, useMyRoles } from "@/hooks/useIntegra";
 import { ROLE_LABELS } from "@/lib/integra";
@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       >
         <div className="border-b border-sidebar-border px-4 py-4">
-          <img src={logo.url} alt="Integra Mission Critical" className="h-8 w-auto" />
+          <img src={logo} alt="Integra Mission Critical" className="h-8 w-auto" />
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           {NAV.map((item) => {
@@ -104,7 +104,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Button variant="ghost" size="icon" onClick={() => setOpen((v) => !v)}>
             <Menu className="size-5" />
           </Button>
-          <img src={logo.url} alt="Integra Mission Critical" className="h-6 w-auto" />
+          <img src={logo} alt="Integra Mission Critical" className="h-6 w-auto" />
         </header>
         <div className="signal-bar h-0.5 w-full" />
         <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>

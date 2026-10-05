@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClipboardList, Replace, Truck } from "lucide-react";
-import logo from "@/assets/integra-mission-critical-logo.webp.asset.json";
+import logo from "@/assets/integra-mission-critical-logo.webp";
 import { Button } from "@/components/ui/button";
 import {
   CtaBand,
@@ -78,7 +78,7 @@ function Landing() {
     <div className="min-h-screen bg-background">
       <header className="flex min-h-24 items-center justify-between gap-6 border-b border-border px-6 py-4">
         <img
-          src={logo.url}
+          src={logo}
           alt="Integra Mission Critical"
           className="h-7 w-auto sm:h-9"
         />

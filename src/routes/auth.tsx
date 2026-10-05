@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import logo from "@/assets/integra-mission-critical-logo.webp.asset.json";
+import logo from "@/assets/integra-mission-critical-logo.webp";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/FormShell";
@@ -75,22 +74,18 @@ function AuthPage() {
   }
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth` },
     });
-    if (result.error) {
-      toast.error("Google sign-in failed. Try again.");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    if (error) toast.error("Google sign-in failed. Try again.");
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-8 block">
-          <img src={logo.url} alt="Integra Mission Critical" className="mx-auto h-8 w-auto" />
+          <img src={logo} alt="Integra Mission Critical" className="mx-auto h-8 w-auto" />
         </Link>
         <div className="panel p-6">
           <h1 className="text-2xl text-foreground">
