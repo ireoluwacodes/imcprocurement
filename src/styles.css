@@ -1,0 +1,175 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Integra Mission Critical design system.
+ * Dark industrial palette derived from the Integra brand mark:
+ * near-black field, deep teal structure, cyan signal accents.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --font-display: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.25rem;
+  --background: oklch(0.16 0.014 240);
+  --foreground: oklch(0.95 0.008 230);
+  --surface: oklch(0.2 0.018 240);
+  --surface-raised: oklch(0.24 0.02 238);
+  --card: oklch(0.2 0.018 240);
+  --card-foreground: oklch(0.95 0.008 230);
+  --popover: oklch(0.22 0.02 240);
+  --popover-foreground: oklch(0.95 0.008 230);
+  --primary: oklch(0.72 0.145 227);
+  --primary-foreground: oklch(0.15 0.02 240);
+  --secondary: oklch(0.42 0.075 218);
+  --secondary-foreground: oklch(0.96 0.01 230);
+  --muted: oklch(0.26 0.02 240);
+  --muted-foreground: oklch(0.7 0.022 232);
+  --accent: oklch(0.31 0.045 226);
+  --accent-foreground: oklch(0.95 0.01 230);
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 240);
+  --success: oklch(0.68 0.13 158);
+  --success-foreground: oklch(0.15 0.02 240);
+  --warning: oklch(0.79 0.14 78);
+  --warning-foreground: oklch(0.17 0.02 240);
+  --border: oklch(0.31 0.022 238);
+  --input: oklch(0.28 0.022 238);
+  --ring: oklch(0.72 0.145 227);
+  --chart-1: oklch(0.72 0.145 227);
+  --chart-2: oklch(0.5 0.09 218);
+  --chart-3: oklch(0.68 0.13 158);
+  --chart-4: oklch(0.79 0.14 78);
+  --chart-5: oklch(0.6 0.2 25);
+  --sidebar: oklch(0.18 0.016 240);
+  --sidebar-foreground: oklch(0.9 0.01 230);
+  --sidebar-primary: oklch(0.72 0.145 227);
+  --sidebar-primary-foreground: oklch(0.15 0.02 240);
+  --sidebar-accent: oklch(0.26 0.025 232);
+  --sidebar-accent-foreground: oklch(0.96 0.01 230);
+  --sidebar-border: oklch(0.28 0.02 238);
+  --sidebar-ring: oklch(0.72 0.145 227);
+  --gradient-signal: linear-gradient(120deg, oklch(0.42 0.075 218), oklch(0.72 0.145 227));
+  --shadow-panel: 0 18px 40px -24px oklch(0 0 0 / 0.85);
+}
+
+.dark {
+  --background: oklch(0.16 0.014 240);
+  --foreground: oklch(0.95 0.008 230);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+}
+
+@utility panel {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-panel);
+}
+
+@utility rule-label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+@utility signal-bar {
+  background-image: var(--gradient-signal);
+}
+
+@utility panel-raised {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 3);
+  box-shadow: var(--shadow-panel);
+}
+
+@utility stat-figure {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--primary);
+}
+
+@media print {
+  aside, nav, header, .print\:hidden, textarea + button, [data-sonner-toaster] { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  main { padding: 0 !important; margin: 0 !important; }
+}

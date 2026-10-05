@@ -1,0 +1,3 @@
+CREATE POLICY "attachments_read" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'form-attachments');
+CREATE POLICY "attachments_upload" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'form-attachments' AND owner = auth.uid());
+CREATE POLICY "attachments_delete" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'form-attachments' AND owner = auth.uid());
