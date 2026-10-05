@@ -52,9 +52,11 @@ export const inviteMember = createServerFn({ method: "POST" })
           company: data.company,
         })
         .eq("id", userId);
+      // Signup trigger gave the new user the default role; swap it for the invited one.
       await supabaseAdmin
         .from("user_roles")
-        .insert({ user_id: userId, role: data.role as never });
+        .update({ role: data.role as never })
+        .eq("user_id", userId);
       await supabaseAdmin.from("activity_log").insert({
         actor_id: context.userId,
         action: "user_invited",

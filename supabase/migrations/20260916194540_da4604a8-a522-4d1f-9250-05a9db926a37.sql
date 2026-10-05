@@ -3,11 +3,6 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS company text NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
 
--- 2. First administrator
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('90adaa41-bd45-494a-8c96-f174797aa93e', 'admin')
-ON CONFLICT DO NOTHING;
-
 -- Never allow the last admin to be removed
 CREATE OR REPLACE FUNCTION public.prevent_last_admin_removal()
 RETURNS trigger
@@ -252,7 +247,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'company',''))
   ON CONFLICT (id) DO NOTHING;
   INSERT INTO public.user_roles (user_id, role)
-  VALUES (NEW.id, COALESCE(NULLIF(NEW.raw_user_meta_data->>'role',''), 'superintendent')::app_role)
+  VALUES (NEW.id, 'superintendent')
   ON CONFLICT DO NOTHING;
   RETURN NEW;
 END; $$;
