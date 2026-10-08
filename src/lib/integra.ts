@@ -58,6 +58,15 @@ export const ROLE_LABELS: Record<string, string> = {
   procurement: "Procurement",
 };
 
+// Highest first; lists sort by this order.
+export const PRIORITIES = ["urgent", "high", "normal", "low"] as const;
+export const PRIORITY_LABELS: Record<string, string> = {
+  urgent: "Urgent",
+  high: "High",
+  normal: "Normal",
+  low: "Low",
+};
+
 export const STATUS_LABELS: Record<string, string> = {
   draft: "Draft",
   submitted: "Submitted",

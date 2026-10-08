@@ -13,7 +13,7 @@ import {
   useProjects,
   useTeam,
 } from "@/hooks/useIntegra";
-import { Section, Field, NumberInput, PageHeader } from "@/components/FormShell";
+import { Section, Field, NumberInput, PageHeader, PrioritySelect } from "@/components/FormShell";
 import { notifyStatusChange } from "@/lib/notify.functions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Attachments } from "@/components/Attachments";
@@ -75,6 +75,7 @@ function PurchaseRequestForm() {
 
   const [form, setForm] = useState<any>({
     pr_number: generateFormId("PR"),
+    priority: "normal",
     request_date: today(),
     required_date: "",
     project_id: "",
@@ -245,6 +246,7 @@ function PurchaseRequestForm() {
         title={form.pr_number}
         actions={
           <>
+            <StatusBadge status={form.priority ?? "normal"} kind="priority" className="self-center" />
             <StatusBadge status={form.status} className="self-center" />
             {isNew || form.status === "draft" || form.status === "revise" ? (
               <>
@@ -315,6 +317,13 @@ function PurchaseRequestForm() {
       <div className="space-y-4">
         <Section title="Request details">
           <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Priority">
+              <PrioritySelect
+                className={selectClass}
+                value={form.priority}
+                onChange={(value) => set("priority", value)}
+              />
+            </Field>
             <Field label="Request date">
               <Input
                 type="date"

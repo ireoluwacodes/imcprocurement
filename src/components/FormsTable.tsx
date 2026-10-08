@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
-import { formatDate } from "@/lib/integra";
+import { PRIORITIES, formatDate } from "@/lib/integra";
 
 type Row = any;
 
@@ -20,11 +20,13 @@ export function FormsTable({
   loading?: boolean;
 }) {
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<"newest" | "oldest">("newest");
+  const [sort, setSort] = useState<"priority" | "newest" | "oldest">("priority");
+  const rank = (row: Row) => PRIORITIES.indexOf(row.priority ?? "normal");
   const filtered = rows
     .filter((row) => JSON.stringify(row).toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => {
       const diff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      if (sort === "priority") return rank(a) - rank(b) || diff;
       return sort === "newest" ? diff : -diff;
     });
 
@@ -39,20 +41,22 @@ export function FormsTable({
         />
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as "newest" | "oldest")}
+          onChange={(e) => setSort(e.target.value as "priority" | "newest" | "oldest")}
           className="h-9 rounded-sm border border-input bg-background px-3 text-sm text-foreground"
           aria-label="Sort"
         >
+          <option value="priority">Highest priority</option>
           <option value="newest">Most recent</option>
           <option value="oldest">Older</option>
         </select>
         <button
           type="button"
           onClick={() => {
-            const head = ["Number", ...columns.map((c) => c.label), "Status", "Created"];
+            const head = ["Number", "Priority", ...columns.map((c) => c.label), "Status", "Created"];
             const flat = (v: unknown) => (v == null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v));
             const lines = filtered.map((row) => [
               row[numberKey],
+              row.priority ?? "normal",
               ...columns.map((c) => (c.key === "projects" ? row.projects?.name : row[c.key])),
               row.status,
               formatDate(row.created_at),
@@ -73,6 +77,7 @@ export function FormsTable({
           <thead>
             <tr className="border-b border-border">
               <th className="rule-label px-4 py-3 text-left">Number</th>
+              <th className="rule-label px-4 py-3 text-left">Priority</th>
               {columns.map((column) => (
                 <th key={column.key} className="rule-label px-4 py-3 text-left">
                   {column.label}
@@ -85,13 +90,13 @@ export function FormsTable({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={columns.length + 3} className="px-4 py-8 text-muted-foreground">
+                <td colSpan={columns.length + 4} className="px-4 py-8 text-muted-foreground">
                   Loading…
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 3} className="px-4 py-8 text-muted-foreground">
+                <td colSpan={columns.length + 4} className="px-4 py-8 text-muted-foreground">
                   Nothing here yet.
                 </td>
               </tr>
@@ -106,6 +111,9 @@ export function FormsTable({
                     >
                       {row[numberKey]}
                     </Link>
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={row.priority ?? "normal"} kind="priority" />
                   </td>
                   {columns.map((column) => (
                     <td key={column.key} className="px-4 py-3 text-muted-foreground">

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { PURCHASE_STATUS_LABELS, STATUS_LABELS } from "@/lib/integra";
+import { PRIORITY_LABELS, PURCHASE_STATUS_LABELS, STATUS_LABELS } from "@/lib/integra";
 
 const FORMS = {
   purchase_request: {
@@ -90,11 +90,16 @@ export const notifyStatusChange = createServerFn({ method: "POST" })
     const link = `${new URL(getRequest().url).origin}/${form.path}/${record.id}`;
     const comments = !purchaseUpdate && record.status !== "submitted" ? lastDecision?.comments : null;
 
+    // High and urgent forms say so up front.
+    const flag = ["urgent", "high"].includes(record["priority"])
+      ? `[${PRIORITY_LABELS[record["priority"]]!.toUpperCase()}] `
+      : "";
+
     let sent = 0;
     for (const person of people ?? []) {
       if (!person.email) continue;
       const waitingOnThem = !purchaseUpdate && record.status === "submitted" && person.id === record.approver_id;
-      const subject = waitingOnThem ? `${number} is waiting for your approval` : `${number}: ${status}`;
+      const subject = flag + (waitingOnThem ? `${number} is waiting for your approval` : `${number}: ${status}`);
       const text = [
         waitingOnThem
           ? `${form.label} ${number} was submitted and is waiting for your approval.`

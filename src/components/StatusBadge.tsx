@@ -1,4 +1,4 @@
-import { STATUS_LABELS, DECISION_LABELS, statusTone } from "@/lib/integra";
+import { STATUS_LABELS, DECISION_LABELS, PRIORITY_LABELS, statusTone } from "@/lib/integra";
 import { cn } from "@/lib/utils";
 
 const toneClass = {
@@ -14,13 +14,23 @@ export function StatusBadge({
   className,
 }: {
   status: string;
-  kind?: "status" | "decision";
+  kind?: "status" | "decision" | "priority";
   className?: string;
 }) {
   const label =
-    kind === "decision" ? (DECISION_LABELS[status] ?? status) : (STATUS_LABELS[status] ?? status);
+    kind === "priority"
+      ? (PRIORITY_LABELS[status] ?? status)
+      : kind === "decision"
+        ? (DECISION_LABELS[status] ?? status)
+        : (STATUS_LABELS[status] ?? status);
   const tone =
-    kind === "decision"
+    kind === "priority"
+      ? status === "urgent"
+        ? "destructive"
+        : status === "high"
+          ? "warning"
+          : "muted"
+      : kind === "decision"
       ? status === "approved" || status === "approved_as_noted"
         ? "success"
         : status === "rejected"

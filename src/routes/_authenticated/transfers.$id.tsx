@@ -5,7 +5,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCatalog, useCurrentUser, useFormFields, useFormRecord, useForms, useProjects } from "@/hooks/useIntegra";
-import { Section, Field, NumberInput, PageHeader } from "@/components/FormShell";
+import { Section, Field, NumberInput, PageHeader, PrioritySelect } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
 import { ApproverReview, requestApproval } from "@/components/ApprovalTrail";
@@ -51,6 +51,7 @@ function MaterialTransferForm() {
 
   const [form, setForm] = useState<any>({
     mtf_number: generateFormId("MTF"),
+    priority: "normal",
     project_id: "",
     transfer_date: today(),
     approver_id: "",
@@ -198,6 +199,7 @@ function MaterialTransferForm() {
         title={form.mtf_number}
         actions={
           <>
+            <StatusBadge status={form.priority ?? "normal"} kind="priority" className="self-center" />
             <StatusBadge status={form.status} className="self-center" />
             <Button variant="outline" size="sm" disabled={saving} onClick={() => save(false)}>
               Save draft
@@ -212,6 +214,13 @@ function MaterialTransferForm() {
       <div className="space-y-4">
         <Section title="Transfer details">
           <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Priority">
+              <PrioritySelect
+                className={selectClass}
+                value={form.priority}
+                onChange={(value) => set("priority", value)}
+              />
+            </Field>
             <Field label="Date" hint="Set automatically when the transfer is created.">
               <Input type="date" value={form.transfer_date ?? today()} readOnly disabled />
             </Field>

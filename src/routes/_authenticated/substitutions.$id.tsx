@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, useFormFields, useFormRecord, useProjects } from "@/hooks/useIntegra";
-import { Section, Field, PageHeader } from "@/components/FormShell";
+import { Section, Field, PageHeader, PrioritySelect } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
 import { ApproverReview, requestApproval } from "@/components/ApprovalTrail";
@@ -50,6 +50,7 @@ function SubstitutionForm() {
 
   const [form, setForm] = useState<any>({
     es_number: generateFormId("ES"),
+    priority: "normal",
     project_id: "",
     specified_item: "",
     approver_id: "",
@@ -157,6 +158,7 @@ function SubstitutionForm() {
         title={form.es_number}
         actions={
           <>
+            <StatusBadge status={form.priority ?? "normal"} kind="priority" className="self-center" />
             <StatusBadge status={form.status} className="self-center" />
             <Button variant="outline" size="sm" disabled={saving} onClick={() => save(false)}>
               Save draft
@@ -171,6 +173,13 @@ function SubstitutionForm() {
       <div className="space-y-4">
         <Section title="Request">
           <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Priority">
+              <PrioritySelect
+                className={selectClass}
+                value={form.priority}
+                onChange={(value) => set("priority", value)}
+              />
+            </Field>
             <Field label="Project">
               <select
                 className={selectClass}

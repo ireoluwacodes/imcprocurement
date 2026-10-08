@@ -1,5 +1,6 @@
 import { useEffect, useState, type ComponentProps, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { PRIORITIES, PRIORITY_LABELS } from "@/lib/integra";
 import { Input } from "@/components/ui/input";
 
 export function Section({
@@ -94,5 +95,25 @@ export function NumberInput({
         onChange(next);
       }}
     />
+  );
+}
+
+export function PrioritySelect({
+  value,
+  onChange,
+  className,
+}: {
+  value: string | null;
+  onChange: (priority: string) => void;
+  className: string;
+}) {
+  return (
+    <select className={className} value={value ?? "normal"} onChange={(e) => onChange(e.target.value)}>
+      {PRIORITIES.map((priority) => (
+        <option key={priority} value={priority}>
+          {PRIORITY_LABELS[priority]}
+        </option>
+      ))}
+    </select>
   );
 }

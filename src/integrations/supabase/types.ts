@@ -186,6 +186,7 @@ export type Database = {
       }
       equipment_substitutions: {
         Row: {
+          priority: string
           approver_id: string | null
           approver_signature: string | null
           approver_signed_at: string | null
@@ -210,6 +211,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          priority?: string
           approver_id?: string | null
           approver_signature?: string | null
           approver_signed_at?: string | null
@@ -234,6 +236,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          priority?: string
           approver_id?: string | null
           approver_signature?: string | null
           approver_signed_at?: string | null
@@ -430,6 +433,7 @@ export type Database = {
       }
       material_transfers: {
         Row: {
+          priority: string
           approver_id: string | null
           created_at: string
           created_by: string
@@ -459,6 +463,7 @@ export type Database = {
           vendor_name: string | null
         }
         Insert: {
+          priority?: string
           approver_id?: string | null
           created_at?: string
           created_by: string
@@ -488,6 +493,7 @@ export type Database = {
           vendor_name?: string | null
         }
         Update: {
+          priority?: string
           approver_id?: string | null
           created_at?: string
           created_by?: string
@@ -648,6 +654,7 @@ export type Database = {
       }
       purchase_requests: {
         Row: {
+          priority: string
           approver_id: string | null
           buyer: string | null
           costpoint_code: string | null
@@ -682,6 +689,7 @@ export type Database = {
           work_order: string | null
         }
         Insert: {
+          priority?: string
           approver_id?: string | null
           buyer?: string | null
           costpoint_code?: string | null
@@ -716,6 +724,7 @@ export type Database = {
           work_order?: string | null
         }
         Update: {
+          priority?: string
           approver_id?: string | null
           buyer?: string | null
           costpoint_code?: string | null
