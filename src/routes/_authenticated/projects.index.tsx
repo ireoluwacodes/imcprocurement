@@ -11,7 +11,7 @@ import {
   useProjects,
   useTeam,
 } from "@/hooks/useIntegra";
-import { PageHeader, Section, Field } from "@/components/FormShell";
+import { PageHeader, Section, Field, NumberInput } from "@/components/FormShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { INVENTORY_CATEGORIES, ROLE_LABELS, money } from "@/lib/integra";
@@ -376,13 +376,11 @@ function ProjectsPage() {
                             <option key={c}>{c}</option>
                           ))}
                         </select>
-                        <Input
-                          type="number"
-                          min={0}
+                        <NumberInput
                           placeholder="Qty"
                           disabled={!!r.serial_number.trim()}
                           value={r.serial_number.trim() ? "1" : r.quantity}
-                          onChange={(e) => set("quantity", e.target.value)}
+                          onChange={(t) => set("quantity", t)}
                         />
                         <Input placeholder="Unit (ea, ft…)" value={r.unit} onChange={(e) => set("unit", e.target.value)} />
                       </div>

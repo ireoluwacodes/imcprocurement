@@ -13,7 +13,7 @@ import {
   useProjects,
   useTeam,
 } from "@/hooks/useIntegra";
-import { Section, Field, PageHeader } from "@/components/FormShell";
+import { Section, Field, NumberInput, PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Attachments } from "@/components/Attachments";
 import { Comments } from "@/components/Comments";
@@ -529,12 +529,7 @@ function PurchaseRequestForm() {
                       />
                     </td>
                     <td className="w-20 p-1">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={line.qty}
-                        onChange={(e) => updateLine(index, { qty: Number(e.target.value) })}
-                      />
+                      <NumberInput value={line.qty} onChange={(t) => updateLine(index, { qty: Number(t) })} />
                     </td>
                     <td className="w-24 p-1">
                       <select
@@ -548,13 +543,7 @@ function PurchaseRequestForm() {
                       </select>
                     </td>
                     <td className="w-28 p-1">
-                      <Input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={line.price}
-                        onChange={(e) => updateLine(index, { price: Number(e.target.value) })}
-                      />
+                      <NumberInput value={line.price} onChange={(t) => updateLine(index, { price: Number(t) })} />
                     </td>
                     <td className="w-28 p-1 font-mono text-muted-foreground">
                       {money(lineTotal(line))}

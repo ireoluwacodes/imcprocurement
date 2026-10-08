@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentUser, useMyRoles, useTeam, useInventoryMovements, useConnexes, type InventoryRow } from "@/hooks/useIntegra";
-import { Section, Field } from "@/components/FormShell";
+import { Section, Field, NumberInput } from "@/components/FormShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { INVENTORY_CATEGORIES } from "@/lib/integra";
@@ -242,7 +242,7 @@ export function InventoryPanel({
                   </select>
                 </Field>
                 <Field label="Quantity">
-                  <Input type="number" min={0} disabled={!!draft.serial_number.trim()} value={draft.serial_number.trim() ? "1" : draft.quantity} onChange={(e) => setDraft({ ...draft, quantity: e.target.value })} />
+                  <NumberInput disabled={!!draft.serial_number.trim()} value={draft.serial_number.trim() ? "1" : draft.quantity} onChange={(t) => setDraft({ ...draft, quantity: t })} />
                 </Field>
                 <Field label="Unit"><Input value={draft.unit} onChange={(e) => setDraft({ ...draft, unit: e.target.value })} /></Field>
               </div>

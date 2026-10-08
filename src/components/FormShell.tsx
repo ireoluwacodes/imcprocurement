@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ComponentProps, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 export function Section({
   title,
@@ -60,5 +61,38 @@ export function PageHeader({
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </div>
+  );
+}
+
+// Number field typed as text: no spinner arrows or scroll-wheel changes, a cleared field stays
+// empty instead of becoming 0 (which then read "01" after typing 1), and only digits and one
+// decimal point get through. onChange receives the raw text.
+export function NumberInput({
+  value,
+  onChange,
+  ...props
+}: { value: number | string; onChange: (text: string) => void } & Omit<
+  ComponentProps<typeof Input>,
+  "value" | "onChange" | "type"
+>) {
+  const shown = (v: number | string) => (Number(v) ? String(v) : "");
+  const [text, setText] = useState(shown(value));
+  // Follow changes made elsewhere (record loaded, row removed) without fighting the typing.
+  useEffect(() => {
+    if (Number(text || 0) !== Number(value || 0)) setText(shown(value));
+  }, [value, text]);
+  return (
+    <Input
+      {...props}
+      type="text"
+      inputMode="decimal"
+      value={text}
+      onChange={(e) => {
+        const next = e.target.value.replace(",", ".");
+        if (!/^\d*\.?\d*$/.test(next)) return;
+        setText(next);
+        onChange(next);
+      }}
+    />
   );
 }

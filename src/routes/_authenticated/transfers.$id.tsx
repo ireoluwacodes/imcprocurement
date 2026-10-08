@@ -5,7 +5,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCatalog, useCurrentUser, useFormFields, useFormRecord, useForms, useProjects } from "@/hooks/useIntegra";
-import { Section, Field, PageHeader } from "@/components/FormShell";
+import { Section, Field, NumberInput, PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
 import { ApprovalTrail, ApproverSelect, requestApproval } from "@/components/ApprovalTrail";
@@ -323,12 +323,7 @@ function MaterialTransferForm() {
                       />
                     </td>
                     <td className="w-20 p-1">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={line.qty}
-                        onChange={(e) => updateLine(index, { qty: Number(e.target.value) })}
-                      />
+                      <NumberInput value={line.qty} onChange={(t) => updateLine(index, { qty: Number(t) })} />
                     </td>
                     <td className="w-24 p-1">
                       <select

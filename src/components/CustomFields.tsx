@@ -1,4 +1,4 @@
-import { Field, Section } from "@/components/FormShell";
+import { Field, NumberInput, Section } from "@/components/FormShell";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -59,16 +59,17 @@ export function CustomFields({
                   />
                   Yes
                 </label>
+              ) : field.field_type === "number" ? (
+                // Empty stays "" so a required number field is not satisfied by a cleared box.
+                <NumberInput
+                  value={(value as string | number) ?? ""}
+                  onChange={(t) => set(field.field_key, t === "" ? "" : Number(t))}
+                />
               ) : (
                 <Input
-                  type={field.field_type === "number" ? "number" : field.field_type === "date" ? "date" : "text"}
+                  type={field.field_type === "date" ? "date" : "text"}
                   value={(value as string | number) ?? ""}
-                  onChange={(e) =>
-                    set(
-                      field.field_key,
-                      field.field_type === "number" ? Number(e.target.value) : e.target.value,
-                    )
-                  }
+                  onChange={(e) => set(field.field_key, e.target.value)}
                 />
               )}
             </Field>
