@@ -8,6 +8,7 @@ import { Section } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { notifyStatusChange } from "@/lib/notify.functions";
 
 export async function requestApproval(formType: string, formId: string, approverId: string) {
   const { error } = await supabase
@@ -71,7 +72,9 @@ export function ApprovalTrail({ formType, formId }: { formType: string; formId: 
       return;
     }
 
-    // The database moves the form's status to match the decision.
+    // The database moves the form's status to match the decision; then email creator and approver.
+    const formType = steps?.find((s) => s.id === stepId)?.form_type;
+    if (formType) notifyStatusChange({ data: { formType, formId } }).catch(console.error);
     toast.success(`Recorded: ${DECISION_LABELS[decision]}`);
     queryClient.invalidateQueries();
   }

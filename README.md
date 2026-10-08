@@ -13,6 +13,8 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=   # server functions only
+RESEND_API_KEY=              # status emails; skipped when unset
+EMAIL_FROM=                  # e.g. "Integra Procurement <notifications@yourdomain.com>"
 ```
 
 ```sh

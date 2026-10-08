@@ -9,6 +9,7 @@ import { Section, Field, PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
 import { ApprovalTrail, ApproverSelect, requestApproval } from "@/components/ApprovalTrail";
+import { notifyStatusChange } from "@/lib/notify.functions";
 import { Attachments } from "@/components/Attachments";
 import { Comments } from "@/components/Comments";
 import { CustomFields, missingCustomField } from "@/components/CustomFields";
@@ -137,7 +138,10 @@ function MaterialTransferForm() {
           .select("id")
           .single();
         if (error) throw error;
-        if (submit) await requestApproval("material_transfer", data.id, form.approver_id);
+        if (submit) {
+          await requestApproval("material_transfer", data.id, form.approver_id);
+          notifyStatusChange({ data: { formType: "material_transfer", formId: data.id } }).catch(console.error);
+        }
         toast.success(`${form.mtf_number} saved`);
         queryClient.invalidateQueries();
         navigate({ to: "/transfers/$id", params: { id: data.id } });
@@ -147,7 +151,10 @@ function MaterialTransferForm() {
           .update(payload as never)
           .eq("id", id);
         if (error) throw error;
-        if (submit) await requestApproval("material_transfer", id, form.approver_id);
+        if (submit) {
+          await requestApproval("material_transfer", id, form.approver_id);
+          notifyStatusChange({ data: { formType: "material_transfer", formId: id } }).catch(console.error);
+        }
         toast.success("Transfer updated");
         queryClient.invalidateQueries();
       }

@@ -9,6 +9,7 @@ import { Section, Field, PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
 import { ApprovalTrail, ApproverSelect, requestApproval } from "@/components/ApprovalTrail";
+import { notifyStatusChange } from "@/lib/notify.functions";
 import { Attachments } from "@/components/Attachments";
 import { Comments } from "@/components/Comments";
 import { CustomFields, missingCustomField } from "@/components/CustomFields";
@@ -111,7 +112,10 @@ function SubstitutionForm() {
           .select("id")
           .single();
         if (error) throw error;
-        if (submit) await requestApproval("equipment_substitution", data.id, form.approver_id);
+        if (submit) {
+          await requestApproval("equipment_substitution", data.id, form.approver_id);
+          notifyStatusChange({ data: { formType: "equipment_substitution", formId: data.id } }).catch(console.error);
+        }
         toast.success(`${form.es_number} saved`);
         queryClient.invalidateQueries();
         navigate({ to: "/substitutions/$id", params: { id: data.id } });
@@ -121,7 +125,10 @@ function SubstitutionForm() {
           .update(payload as never)
           .eq("id", id);
         if (error) throw error;
-        if (submit) await requestApproval("equipment_substitution", id, form.approver_id);
+        if (submit) {
+          await requestApproval("equipment_substitution", id, form.approver_id);
+          notifyStatusChange({ data: { formType: "equipment_substitution", formId: id } }).catch(console.error);
+        }
         toast.success("Substitution updated");
         queryClient.invalidateQueries();
       }
