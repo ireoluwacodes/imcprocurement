@@ -9,6 +9,7 @@ import {
   useCurrentUser,
   useFormFields,
   useFormRecord,
+  useMyRoles,
   useProjects,
   useTeam,
 } from "@/hooks/useIntegra";
@@ -64,6 +65,8 @@ function PurchaseRequestForm() {
   const { data: user } = useCurrentUser();
   const { data: projects } = useProjects();
   const { data: team } = useTeam();
+  const { data: myRoles } = useMyRoles();
+  const canSetPurchaseStatus = Boolean(myRoles?.some((role) => role === "admin" || role === "procurement"));
   const { data: recordRaw } = useFormRecord("purchase_requests", id);
   const { data: customFieldDefs } = useFormFields("purchase_requests");
   const { data: catalog } = useCatalog();
@@ -254,18 +257,24 @@ function PurchaseRequestForm() {
               <select
                 className={`${selectClass} w-auto self-center`}
                 value={form.purchase_status ?? "not_ordered"}
-                disabled={saving}
+                disabled={saving || !canSetPurchaseStatus}
+                title={canSetPurchaseStatus ? undefined : "Only Procurement or an administrator can change this."}
                 onChange={async (e) => {
+                  const previous = form.purchase_status;
                   const next = e.target.value;
                   set("purchase_status", next);
                   setSaving(true);
-                  const { error } = await supabase
+                  // RLS drops an unpermitted update without an error, so check a row came back.
+                  const { data: updated, error } = await supabase
                     .from("purchase_requests")
                     .update({ purchase_status: next } as never)
-                    .eq("id", id);
+                    .eq("id", id)
+                    .select("id");
                   setSaving(false);
-                  if (error) toast.error(error.message);
-                  else {
+                  if (error || !updated?.length) {
+                    set("purchase_status", previous);
+                    toast.error(error?.message ?? "Only Procurement or an administrator can change the purchase status.");
+                  } else {
                     toast.success(`Marked as ${PURCHASE_STATUS_LABELS[next] ?? next}`);
                     queryClient.invalidateQueries();
                   }
@@ -373,7 +382,7 @@ function PurchaseRequestForm() {
 
         <Section title="Shipping">
           <div className="grid gap-4 md:grid-cols-3">
-            <Field label="Ship to" className="md:col-span-1">
+            <Field label="Ship to (address)" className="md:col-span-1">
               <Input
                 value={form.ship_to ?? ""}
                 onChange={(e) => set("ship_to", e.target.value)}
