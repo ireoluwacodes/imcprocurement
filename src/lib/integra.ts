@@ -25,6 +25,10 @@ export const PR_REASONS = [
   "Consumables",
   "Safety",
   "Office Supplies",
+  "Subcontractor Request",
+  "Missing RCL",
+  "Warranty Item",
+  "Missing Shiplist",
   "Other",
 ] as const;
 export const INVENTORY_CATEGORIES: string[] = ["Material", "Equipment", "Rental Equipment", "Tool"];
