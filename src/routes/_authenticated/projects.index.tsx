@@ -348,7 +348,7 @@ function ProjectsPage() {
             {!editingId ? (
               <>
               <div className="space-y-2">
-                <span className="rule-label block">Connexes (storage containers)</span>
+                <span className="rule-label block">Storage Facility i.e connex, site trailer</span>
                 {connexNames.map((n, i) => (
                   <div key={i} className="flex gap-1">
                     <Input placeholder="Connex name" value={n} onChange={(e) => setConnexNames(connexNames.map((x, j) => (j === i ? e.target.value : x)))} />
