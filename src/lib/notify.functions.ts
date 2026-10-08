@@ -1,9 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { STATUS_LABELS } from "@/lib/integra";
+import { PURCHASE_STATUS_LABELS, STATUS_LABELS } from "@/lib/integra";
 
 const FORMS = {
+  purchase_request: {
+    table: "purchase_requests",
+    numberKey: "pr_number",
+    label: "Purchase request",
+    path: "purchase-requests",
+  },
   equipment_substitution: {
     table: "equipment_substitutions",
     numberKey: "es_number",
@@ -18,13 +24,17 @@ const FORMS = {
   },
 } as const;
 
-// Emails a form's creator and approver, except whoever made the change, about its current status.
-// Everything in the email is read from the database; the caller only names the form.
+// Emails a form's creator and approver, except whoever made the change, about its current status
+// (or a PR's purchase status). Everything in the email is read from the database; the caller only
+// names the form and which status changed.
 export const notifyStatusChange = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { formType: string; formId: string }) => {
+  .inputValidator((input: { formType: string; formId: string; field?: "status" | "purchase_status" }) => {
     if (!(input.formType in FORMS)) throw new Error("Unknown form type.");
-    return input as { formType: keyof typeof FORMS; formId: string };
+    if (input.field === "purchase_status" && input.formType !== "purchase_request") {
+      throw new Error("Only purchase requests have a purchase status.");
+    }
+    return input as { formType: keyof typeof FORMS; formId: string; field?: "status" | "purchase_status" };
   })
   .handler(async ({ data, context }) => {
     const apiKey = process.env["RESEND_API_KEY"];
@@ -45,13 +55,14 @@ export const notifyStatusChange = createServerFn({ method: "POST" })
       | null;
     if (!record) throw new Error("Form not found.");
 
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (!isAdmin && context.userId !== record.created_by && context.userId !== record.approver_id) {
-      throw new Error("Only the creator, approver or an administrator can send updates.");
-    }
+    const hasRole = async (role: "admin" | "procurement") =>
+      (await context.supabase.rpc("has_role", { _user_id: context.userId, _role: role })).data === true;
+    const allowed =
+      context.userId === record.created_by ||
+      context.userId === record.approver_id ||
+      (await hasRole("admin")) ||
+      (data.formType === "purchase_request" && (await hasRole("procurement")));
+    if (!allowed) throw new Error("You can't send updates for this form.");
 
     const recipientIds = [...new Set([record.created_by, record.approver_id])].filter(
       (id): id is string => Boolean(id) && id !== context.userId,
@@ -72,19 +83,22 @@ export const notifyStatusChange = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const number = record[form.numberKey];
-    const status = STATUS_LABELS[record.status] ?? record.status;
+    const purchaseUpdate = data.field === "purchase_status";
+    const status = purchaseUpdate
+      ? (PURCHASE_STATUS_LABELS[record["purchase_status"]] ?? record["purchase_status"])
+      : (STATUS_LABELS[record.status] ?? record.status);
     const link = `${new URL(getRequest().url).origin}/${form.path}/${record.id}`;
-    const comments = record.status !== "submitted" ? lastDecision?.comments : null;
+    const comments = !purchaseUpdate && record.status !== "submitted" ? lastDecision?.comments : null;
 
     let sent = 0;
     for (const person of people ?? []) {
       if (!person.email) continue;
-      const waitingOnThem = record.status === "submitted" && person.id === record.approver_id;
+      const waitingOnThem = !purchaseUpdate && record.status === "submitted" && person.id === record.approver_id;
       const subject = waitingOnThem ? `${number} is waiting for your approval` : `${number}: ${status}`;
       const text = [
         waitingOnThem
           ? `${form.label} ${number} was submitted and is waiting for your approval.`
-          : `${form.label} ${number} is now ${status}.`,
+          : `${form.label} ${number} is now ${status}${purchaseUpdate ? " (purchase status)" : ""}.`,
         comments ? `\nComments: ${comments}` : "",
         `\nOpen it: ${link}`,
       ].join("\n");

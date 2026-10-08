@@ -14,6 +14,7 @@ import {
   useTeam,
 } from "@/hooks/useIntegra";
 import { Section, Field, NumberInput, PageHeader } from "@/components/FormShell";
+import { notifyStatusChange } from "@/lib/notify.functions";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Attachments } from "@/components/Attachments";
 import { Comments } from "@/components/Comments";
@@ -156,6 +157,9 @@ function PurchaseRequestForm() {
           .select("id")
           .single();
         if (error) throw error;
+        if (submit) {
+          notifyStatusChange({ data: { formType: "purchase_request", formId: data.id } }).catch(console.error);
+        }
         toast.success(`${form.pr_number} saved`);
         queryClient.invalidateQueries();
         navigate({ to: "/purchase-requests/$id", params: { id: data.id } });
@@ -165,6 +169,9 @@ function PurchaseRequestForm() {
           .update(payload as never)
           .eq("id", id);
         if (error) throw error;
+        if (submit) {
+          notifyStatusChange({ data: { formType: "purchase_request", formId: id } }).catch(console.error);
+        }
         toast.success("Purchase request updated");
         queryClient.invalidateQueries();
       }
@@ -276,6 +283,9 @@ function PurchaseRequestForm() {
                     toast.error(error?.message ?? "Only Procurement or an administrator can change the purchase status.");
                   } else {
                     toast.success(`Marked as ${PURCHASE_STATUS_LABELS[next] ?? next}`);
+                    notifyStatusChange({
+                      data: { formType: "purchase_request", formId: id, field: "purchase_status" },
+                    }).catch(console.error);
                     queryClient.invalidateQueries();
                   }
                 }}
