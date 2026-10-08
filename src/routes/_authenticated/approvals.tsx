@@ -33,6 +33,15 @@ const TYPE_LABELS: Record<string, string> = {
   material_transfer: "Material Transfer",
 };
 
+const ALL_DECISIONS = ["pending", "approved", "approved_as_noted", "revise_resubmit", "rejected"];
+const FILTERS = {
+  all: { label: "All", decisions: ALL_DECISIONS },
+  mine: { label: "Waiting on me", decisions: [] as string[] },
+  pending: { label: "Pending", decisions: ["pending"] },
+  approved: { label: "Approved", decisions: ["approved", "approved_as_noted"] },
+  declined: { label: "Declined", decisions: ["rejected"] },
+};
+
 function ApprovalsPage() {
   const { data: steps, isLoading } = useApprovals();
   const { data: prs } = useForms("purchase_requests");
@@ -42,7 +51,7 @@ function ApprovalsPage() {
   const { data: user } = useCurrentUser();
   const { data: myRoles } = useMyRoles();
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"mine" | "pending" | "decided" | "all">("all");
+  const [filter, setFilter] = useState<keyof typeof FILTERS>("all");
 
   const numbers = useMemo(() => {
     const map = new Map<string, string>();
@@ -66,15 +75,7 @@ function ApprovalsPage() {
   const formSteps = (steps ?? []).filter((step) => step.form_type !== "purchase_request");
   const mineCount = formSteps.filter(waitingOnMe).length;
   const rows = formSteps
-    .filter((step) =>
-      filter === "mine"
-        ? waitingOnMe(step)
-        : filter === "pending"
-          ? step.decision === "pending"
-          : filter === "decided"
-            ? step.decision !== "pending"
-            : true,
-    )
+    .filter((step) => (filter === "mine" ? waitingOnMe(step) : FILTERS[filter].decisions.includes(step.decision)))
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .filter((step) => {
       const haystack = `${numbers.get(step.form_id) ?? ""} ${TYPE_LABELS[step.form_type] ?? ""} ${approverOf(
@@ -90,7 +91,7 @@ function ApprovalsPage() {
         title="Approvals"
         actions={
           <div className="flex gap-2">
-            {(["all", "mine", "pending", "decided"] as const).map((value) => (
+            {(Object.keys(FILTERS) as (keyof typeof FILTERS)[]).map((value) => (
               <button
                 key={value}
                 type="button"
@@ -101,13 +102,7 @@ function ApprovalsPage() {
                     : "border-border text-muted-foreground"
                 }`}
               >
-                {value === "mine"
-                  ? `Waiting on me (${mineCount})`
-                  : value === "pending"
-                    ? "Pending"
-                    : value === "decided"
-                      ? "Decided"
-                      : "All"}
+                {value === "mine" ? `${FILTERS.mine.label} (${mineCount})` : FILTERS[value].label}
               </button>
             ))}
           </div>
@@ -127,7 +122,7 @@ function ApprovalsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                {["Form", "Type", "Step", "Approver", "Decision", "Decided"].map((header) => (
+                {["Form", "Type", "Approver", "Decision"].map((header) => (
                   <th key={header} className="rule-label px-4 py-3 text-left">
                     {header}
                   </th>
@@ -137,13 +132,13 @@ function ApprovalsPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-muted-foreground">
+                  <td colSpan={4} className="px-4 py-8 text-muted-foreground">
                     Loading…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-muted-foreground">
+                  <td colSpan={4} className="px-4 py-8 text-muted-foreground">
                     Nothing to show.
                   </td>
                 </tr>
@@ -162,13 +157,18 @@ function ApprovalsPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {TYPE_LABELS[step.form_type] ?? step.form_type}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{step.step_order}</td>
                     <td className="px-4 py-3 text-muted-foreground">{approverOf(step)}</td>
                     <td className="px-4 py-3">
-                      <StatusBadge status={step.decision} kind="decision" />
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {step.decided_at ? formatDate(step.decided_at) : "—"}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusBadge status={step.decision} kind="decision" />
+                        <span className="text-xs text-muted-foreground">
+                          {step.decision === "pending"
+                            ? `waiting on ${approverOf(step)}`
+                            : step.decided_at
+                              ? formatDate(step.decided_at)
+                              : ""}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -8,7 +8,7 @@ import { useCurrentUser, useFormFields, useFormRecord, useProjects } from "@/hoo
 import { Section, Field, PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
-import { ApprovalTrail, ApproverSelect, requestApproval } from "@/components/ApprovalTrail";
+import { ApproverReview, requestApproval } from "@/components/ApprovalTrail";
 import { notifyStatusChange } from "@/lib/notify.functions";
 import { Attachments } from "@/components/Attachments";
 import { Comments } from "@/components/Comments";
@@ -192,13 +192,6 @@ function SubstitutionForm() {
                 maxLength={160}
               />
             </Field>
-            <Field label="Approver">
-              <ApproverSelect
-                className={selectClass}
-                value={form.approver_id}
-                onChange={(value) => set("approver_id", value)}
-              />
-            </Field>
           </div>
         </Section>
 
@@ -275,6 +268,15 @@ function SubstitutionForm() {
           </div>
         </Section>
 
+        <ApproverReview
+          formType="Equipment Substitution"
+          formId={isNew ? null : id}
+          approverId={form.approver_id}
+          onApproverChange={(value) => set("approver_id", value)}
+          canAssign={isNew || form.status === "draft" || form.status === "revise"}
+          selectClass={selectClass}
+        />
+
         {!isNew ? (
           <>
             <CustomFields
@@ -284,7 +286,6 @@ function SubstitutionForm() {
             />
             <Attachments formType="equipment_substitution" formId={id} />
             <Comments formType="equipment_substitution" formId={id} />
-            <ApprovalTrail formType="Equipment Substitution" formId={id} />
           </>
         ) : null}
       </div>

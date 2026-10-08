@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useApprovals, useCurrentUser, useMyRoles, useTeam } from "@/hooks/useIntegra";
 import { ROLE_LABELS, DECISION_LABELS, formatDate } from "@/lib/integra";
-import { Section } from "@/components/FormShell";
+import { Field, Section } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,7 +41,23 @@ export function ApproverSelect({
   );
 }
 
-export function ApprovalTrail({ formType, formId }: { formType: string; formId: string }) {
+// The form's approver review: who approves it, and their decision. Only the assigned approver
+// sees the decision controls (the approvals_update policy enforces the same).
+export function ApproverReview({
+  formType,
+  formId,
+  approverId,
+  onApproverChange,
+  canAssign,
+  selectClass,
+}: {
+  formType: string;
+  formId: string | null;
+  approverId: string | null;
+  onApproverChange: (userId: string) => void;
+  canAssign: boolean;
+  selectClass: string;
+}) {
   const { data: steps } = useApprovals(formId);
   const { data: user } = useCurrentUser();
   const { data: myRoles } = useMyRoles();
@@ -51,59 +67,66 @@ export function ApprovalTrail({ formType, formId }: { formType: string; formId: 
 
   const nameOf = (userId: string) => {
     const person = team?.find((member) => member.id === userId);
-    return person ? `${person.first_name} ${person.last_name}`.trim() || person.email : "Assigned approver";
+    return person ? `${person.first_name} ${person.last_name}`.trim() || person.email : "the approver";
   };
-  // Mirrors the approvals_update policy: the assignee, an admin, or (older steps) the role holder.
+  const approverOf = (step: { assignee_id: string | null; role: string | null }) =>
+    step.assignee_id ? nameOf(step.assignee_id) : (ROLE_LABELS[step.role ?? ""] ?? step.role ?? "the approver");
+  // Assigned steps: only the assignee. Older role-routed steps: the role holder or an admin.
   const canDecide = (step: { assignee_id: string | null; role: string | null }) =>
-    Boolean(myRoles?.includes("admin")) ||
-    (step.assignee_id ? step.assignee_id === user?.id : Boolean(step.role && myRoles?.includes(step.role)));
+    step.assignee_id
+      ? step.assignee_id === user?.id
+      : Boolean(myRoles?.includes("admin") || (step.role && myRoles?.includes(step.role)));
 
   async function decide(stepId: string, decision: string) {
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("approvals")
       .update({
         decision: decision as never,
         comments: comments[stepId] ?? null,
         decided_at: new Date().toISOString(),
       })
-      .eq("id", stepId);
-    if (error) {
-      toast.error(error.message);
+      .eq("id", stepId)
+      .select("form_type");
+    if (error || !updated?.length) {
+      toast.error(error?.message ?? "Only the assigned approver can record this decision.");
       return;
     }
 
     // The database moves the form's status to match the decision; then email creator and approver.
-    const formType = steps?.find((s) => s.id === stepId)?.form_type;
-    if (formType) notifyStatusChange({ data: { formType, formId } }).catch(console.error);
+    if (formId) notifyStatusChange({ data: { formType: updated[0]!.form_type, formId } }).catch(console.error);
     toast.success(`Recorded: ${DECISION_LABELS[decision]}`);
     queryClient.invalidateQueries();
   }
 
-  if (!steps || steps.length === 0) {
-    return (
-      <Section title="Approval">
-        <p className="text-sm text-muted-foreground">Submit the form to send it to the selected approver.</p>
-      </Section>
-    );
-  }
+  const history = formId ? (steps ?? []) : [];
 
   return (
-    <Section
-      title="Approval"
-      description="The assigned approver records the decision."
-    >
-      <ol className="space-y-4">
-        {steps.map((step) => (
-          <li key={step.id} className="rounded-sm border border-border p-4">
+    <Section title="Approver review">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="Approver" {...(canAssign ? { hint: "They are asked to approve when you submit." } : {})}>
+          {canAssign ? (
+            <ApproverSelect className={selectClass} value={approverId} onChange={onApproverChange} />
+          ) : (
+            <p className="flex h-9 items-center text-sm text-foreground">
+              {approverId ? nameOf(approverId) : "—"}
+            </p>
+          )}
+        </Field>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        <span className="rule-label block">Decision (Project Executive)</span>
+        {history.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Submit the form to send it to the approver.</p>
+        ) : null}
+        {history.map((step) => (
+          <div key={step.id} className="rounded-sm border border-border p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="font-display text-sm uppercase tracking-[0.1em] text-foreground">
-                  {step.assignee_id ? nameOf(step.assignee_id) : (ROLE_LABELS[step.role ?? ""] ?? step.role)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {step.decided_at ? `Decided ${formatDate(step.decided_at)}` : "Awaiting decision"}
-                </p>
-              </div>
+              <p className="text-sm text-foreground">
+                {step.decision === "pending"
+                  ? `Pending — waiting on ${approverOf(step)}`
+                  : `${approverOf(step)} · ${step.decided_at ? formatDate(step.decided_at) : ""}`}
+              </p>
               <StatusBadge status={step.decision} kind="decision" />
             </div>
             {step.comments ? (
@@ -121,33 +144,21 @@ export function ApprovalTrail({ formType, formId }: { formType: string; formId: 
                   <Button size="sm" onClick={() => decide(step.id, "approved")}>
                     Approve
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => decide(step.id, "approved_as_noted")}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => decide(step.id, "approved_as_noted")}>
                     Approve as noted
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => decide(step.id, "revise_resubmit")}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => decide(step.id, "revise_resubmit")}>
                     Revise &amp; resubmit
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => decide(step.id, "rejected")}
-                  >
+                  <Button size="sm" variant="destructive" onClick={() => decide(step.id, "rejected")}>
                     Reject
                   </Button>
                 </div>
               </div>
             ) : null}
-          </li>
+          </div>
         ))}
-      </ol>
+      </div>
       <p className="mt-4 text-xs text-muted-foreground">
         {formType} · Every decision is timestamped and retained for audit.
       </p>

@@ -8,7 +8,7 @@ import { useCatalog, useCurrentUser, useFormFields, useFormRecord, useForms, use
 import { Section, Field, NumberInput, PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
-import { ApprovalTrail, ApproverSelect, requestApproval } from "@/components/ApprovalTrail";
+import { ApproverReview, requestApproval } from "@/components/ApprovalTrail";
 import { notifyStatusChange } from "@/lib/notify.functions";
 import { Attachments } from "@/components/Attachments";
 import { Comments } from "@/components/Comments";
@@ -228,13 +228,6 @@ function MaterialTransferForm() {
                   </option>
                 ))}
               </select>
-            </Field>
-            <Field label="Approver">
-              <ApproverSelect
-                className={selectClass}
-                value={form.approver_id}
-                onChange={(value) => set("approver_id", value)}
-              />
             </Field>
             <Field label="Transfer type">
               <select
@@ -464,6 +457,15 @@ function MaterialTransferForm() {
           </div>
         </Section>
 
+        <ApproverReview
+          formType="Material Transfer"
+          formId={isNew ? null : id}
+          approverId={form.approver_id}
+          onApproverChange={(value) => set("approver_id", value)}
+          canAssign={isNew || form.status === "draft" || form.status === "revise"}
+          selectClass={selectClass}
+        />
+
         {!isNew ? (
           <>
             <CustomFields
@@ -473,7 +475,6 @@ function MaterialTransferForm() {
             />
             <Attachments formType="material_transfer" formId={id} />
             <Comments formType="material_transfer" formId={id} />
-            <ApprovalTrail formType="Material Transfer" formId={id} />
           </>
         ) : null}
       </div>

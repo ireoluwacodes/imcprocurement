@@ -123,11 +123,13 @@ export function useIsAdmin() {
   return (roles ?? []).includes("admin");
 }
 
-export function useApprovals(formId?: string) {
+// No argument: every approval. null: a form not saved yet, so nothing to fetch.
+export function useApprovals(formId?: string | null) {
   return useQuery({
     queryKey: ["approvals", formId ?? "all"],
+    enabled: formId !== null,
     queryFn: async () => {
-      let query = supabase.from("approvals").select("*").order("step_order");
+      let query = supabase.from("approvals").select("*").order("step_order").order("created_at");
       if (formId) query = query.eq("form_id", formId);
       const { data, error } = await query;
       if (error) throw error;
