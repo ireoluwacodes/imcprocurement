@@ -133,10 +133,30 @@ export function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export const PURCHASE_STATUSES = ["not_ordered", "ordered", "arrived"] as const;
+export const PURCHASE_STATUSES = [
+  "not_ordered",
+  "ordered",
+  "shipped",
+  "delayed",
+  "not_arrived",
+  "lost",
+  "arrived",
+  "received",
+  "onsite",
+  "handed_to_install",
+  "request_closed",
+] as const;
 
 export const PURCHASE_STATUS_LABELS: Record<string, string> = {
   not_ordered: "Not ordered",
   ordered: "Ordered",
+  shipped: "Shipped",
+  delayed: "Delayed",
+  not_arrived: "Not arrived",
+  lost: "Lost",
   arrived: "Arrived",
+  received: "Received",
+  onsite: "Onsite",
+  handed_to_install: "Handed to install",
+  request_closed: "Request closed",
 };
