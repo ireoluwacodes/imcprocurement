@@ -6,8 +6,7 @@ import { useCurrentUser, useMyRoles, useTeam, useInventoryMovements, useConnexes
 import { Section, Field } from "@/components/FormShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-const CATEGORIES = ["Material", "Equipment", "Tool"];
+import { INVENTORY_CATEGORIES } from "@/lib/integra";
 
 function Photo({ path }: { path: string | null }) {
   const [url, setUrl] = useState<string | null>(null);
@@ -172,7 +171,7 @@ export function InventoryPanel({
             onChange={(e) => setCat(e.target.value)}
           >
             <option value="">All categories</option>
-            {CATEGORIES.map((c) => (
+            {[...new Set([...INVENTORY_CATEGORIES, ...items.map((i) => i.category)])].map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
@@ -239,7 +238,7 @@ export function InventoryPanel({
               <div className="grid grid-cols-3 gap-2">
                 <Field label="Category">
                   <select className="h-9 w-full rounded-sm border border-input bg-background px-2 text-sm text-foreground" value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}>
-                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                    {INVENTORY_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </Field>
                 <Field label="Quantity">

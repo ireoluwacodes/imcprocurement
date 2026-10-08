@@ -14,7 +14,7 @@ import {
 import { PageHeader, Section, Field } from "@/components/FormShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ROLE_LABELS, money } from "@/lib/integra";
+import { INVENTORY_CATEGORIES, ROLE_LABELS, money } from "@/lib/integra";
 import { APPROVAL_CHAIN } from "@/lib/integra";
 
 export const Route = createFileRoute("/_authenticated/projects/")({
@@ -165,7 +165,7 @@ function ProjectsPage() {
             connex_id: boxIds[r.connex.trim()] ?? null,
             name: r.name.trim(),
             serial_number: r.serial_number.trim() || null,
-            category: r.category || "Material",
+            category: r.category.trim() || "Other",
             unit: r.unit || "ea",
             starting_qty: r.serial_number.trim() ? 1 : Number(r.quantity) || 0,
             created_by: user?.id ?? null,
@@ -369,10 +369,10 @@ function ProjectsPage() {
                         <Input placeholder="Serial # (optional)" value={r.serial_number} onChange={(e) => set("serial_number", e.target.value)} />
                         <select
                           className="h-9 rounded-sm border border-input bg-background px-2 text-sm text-foreground"
-                          value={r.category}
-                          onChange={(e) => set("category", e.target.value)}
+                          value={INVENTORY_CATEGORIES.includes(r.category) ? r.category : "Other"}
+                          onChange={(e) => set("category", e.target.value === "Other" ? "" : e.target.value)}
                         >
-                          {["Material", "Equipment", "Tool"].map((c) => (
+                          {[...INVENTORY_CATEGORIES, "Other"].map((c) => (
                             <option key={c}>{c}</option>
                           ))}
                         </select>
@@ -386,6 +386,9 @@ function ProjectsPage() {
                         />
                         <Input placeholder="Unit (ea, ft…)" value={r.unit} onChange={(e) => set("unit", e.target.value)} />
                       </div>
+                      {INVENTORY_CATEGORIES.includes(r.category) ? null : (
+                        <Input autoFocus placeholder="Type (e.g. Safety gear)" value={r.category} onChange={(e) => set("category", e.target.value)} />
+                      )}
                       <select
                         className="h-9 w-full rounded-sm border border-input bg-background px-2 text-sm text-foreground"
                         value={r.connex}

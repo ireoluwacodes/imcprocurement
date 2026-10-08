@@ -27,6 +27,7 @@ export const PR_REASONS = [
   "Office Supplies",
   "Other",
 ] as const;
+export const INVENTORY_CATEGORIES: string[] = ["Material", "Equipment", "Rental Equipment", "Tool"];
 export const UOMS = ["EA", "BX", "FT", "LB", "GAL", "SET", "ROLL", "CS"] as const;
 export const TRANSFER_TYPES = [
   "From Project",
