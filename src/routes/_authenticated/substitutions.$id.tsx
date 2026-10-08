@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DECISION_LABELS, generateFormId, today } from "@/lib/integra";
+import { generateFormId, today } from "@/lib/integra";
 
 export const Route = createFileRoute("/_authenticated/substitutions/$id")({
   head: () => ({
@@ -61,16 +61,12 @@ function SubstitutionForm() {
     certified: false,
     requester_signature: null,
     requester_signed_at: today(),
-    review_decision: "pending",
-    review_comments: "",
-    approver_signature: null,
-    approver_signed_at: "",
     status: "draft",
   });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (record) setForm({ ...record, approver_signed_at: record.approver_signed_at ?? "" });
+    if (record) setForm(record);
   }, [record]);
 
   const set = (key: string, value: unknown) => setForm((prev: any) => ({ ...prev, [key]: value }));
@@ -101,7 +97,6 @@ function SubstitutionForm() {
       ...form,
       custom_fields: form.custom_fields ?? {},
       requester_signed_at: form.requester_signed_at || null,
-      approver_signed_at: form.approver_signed_at || null,
       approver_id: form.approver_id || null,
       status: submit ? "submitted" : form.status,
       created_by: user.id,
@@ -270,48 +265,6 @@ function SubstitutionForm() {
                 onChange={(e) => set("requester_signed_at", e.target.value)}
               />
             </Field>
-          </div>
-        </Section>
-
-        <Section title="Approver review">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Decision">
-              <select
-                className={selectClass}
-                value={form.review_decision ?? "pending"}
-                onChange={(e) => set("review_decision", e.target.value)}
-              >
-                {Object.entries(DECISION_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Date">
-              <Input
-                type="date"
-                value={form.approver_signed_at ?? ""}
-                onChange={(e) => set("approver_signed_at", e.target.value)}
-              />
-            </Field>
-          </div>
-          <div className="mt-4">
-            <Field label="Comments">
-              <Textarea
-                rows={3}
-                value={form.review_comments ?? ""}
-                onChange={(e) => set("review_comments", e.target.value)}
-                maxLength={1000}
-              />
-            </Field>
-          </div>
-          <div className="mt-4">
-            <SignaturePad
-              label="Approver signature"
-              value={form.approver_signature}
-              onChange={(value) => set("approver_signature", value)}
-            />
           </div>
         </Section>
 

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useApprovals, useForms, useTeam } from "@/hooks/useIntegra";
+import { useApprovals, useCurrentUser, useForms, useMyRoles, useTeam } from "@/hooks/useIntegra";
 import { PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
@@ -39,8 +39,10 @@ function ApprovalsPage() {
   const { data: subs } = useForms("equipment_substitutions");
   const { data: mtfs } = useForms("material_transfers");
   const { data: team } = useTeam();
+  const { data: user } = useCurrentUser();
+  const { data: myRoles } = useMyRoles();
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"pending" | "decided" | "all">("all");
+  const [filter, setFilter] = useState<"mine" | "pending" | "decided" | "all">("all");
 
   const numbers = useMemo(() => {
     const map = new Map<string, string>();
@@ -56,14 +58,22 @@ function ApprovalsPage() {
     return ROLE_LABELS[step.role ?? ""] ?? step.role ?? "—";
   };
 
-  const rows = (steps ?? [])
-    .filter((step) => step.form_type !== "purchase_request")
+  // Pending steps assigned to me, or (older role-based steps) routed to a role I hold.
+  const waitingOnMe = (step: { decision: string; assignee_id: string | null; role: string | null }) =>
+    step.decision === "pending" &&
+    (step.assignee_id ? step.assignee_id === user?.id : Boolean(step.role && myRoles?.includes(step.role)));
+
+  const formSteps = (steps ?? []).filter((step) => step.form_type !== "purchase_request");
+  const mineCount = formSteps.filter(waitingOnMe).length;
+  const rows = formSteps
     .filter((step) =>
-      filter === "pending"
-        ? step.decision === "pending"
-        : filter === "decided"
-          ? step.decision !== "pending"
-          : true,
+      filter === "mine"
+        ? waitingOnMe(step)
+        : filter === "pending"
+          ? step.decision === "pending"
+          : filter === "decided"
+            ? step.decision !== "pending"
+            : true,
     )
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .filter((step) => {
@@ -80,7 +90,7 @@ function ApprovalsPage() {
         title="Approvals"
         actions={
           <div className="flex gap-2">
-            {(["all", "pending", "decided"] as const).map((value) => (
+            {(["all", "mine", "pending", "decided"] as const).map((value) => (
               <button
                 key={value}
                 type="button"
@@ -91,7 +101,13 @@ function ApprovalsPage() {
                     : "border-border text-muted-foreground"
                 }`}
               >
-                {value === "pending" ? "Pending" : value === "decided" ? "Decided" : "All"}
+                {value === "mine"
+                  ? `Waiting on me (${mineCount})`
+                  : value === "pending"
+                    ? "Pending"
+                    : value === "decided"
+                      ? "Decided"
+                      : "All"}
               </button>
             ))}
           </div>

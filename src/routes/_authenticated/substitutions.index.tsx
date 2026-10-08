@@ -2,8 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/FormShell";
 import { FormsTable } from "@/components/FormsTable";
 import { Button } from "@/components/ui/button";
-import { useForms } from "@/hooks/useIntegra";
-import { DECISION_LABELS } from "@/lib/integra";
+import { useForms, useTeam } from "@/hooks/useIntegra";
 
 export const Route = createFileRoute("/_authenticated/substitutions/")({
   head: () => ({
@@ -22,6 +21,11 @@ export const Route = createFileRoute("/_authenticated/substitutions/")({
 
 function Substitutions() {
   const { data, isLoading } = useForms("equipment_substitutions");
+  const { data: team } = useTeam();
+  const approverName = (id: string | null) => {
+    const member = team?.find((m) => m.id === id);
+    return member ? `${member.first_name} ${member.last_name}`.trim() || member.email : "—";
+  };
 
   return (
     <div>
@@ -45,11 +49,7 @@ function Substitutions() {
           { key: "project", label: "Project", render: (row) => row.projects?.name ?? "—" },
           { key: "specified_item", label: "Specified item" },
           { key: "from_equipment", label: "From" },
-          {
-            key: "review_decision",
-            label: "Review",
-            render: (row) => DECISION_LABELS[row.review_decision] ?? "—",
-          },
+          { key: "approver_id", label: "Approver", render: (row) => approverName(row.approver_id) },
         ]}
       />
     </div>
