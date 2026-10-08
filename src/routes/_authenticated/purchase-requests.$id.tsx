@@ -578,6 +578,7 @@ function PurchaseRequestForm() {
             <Field label="Notes">
               <Textarea
                 rows={4}
+                placeholder="Example: WEB URL, AMAZON LINK"
                 value={form.notes ?? ""}
                 onChange={(e) => set("notes", e.target.value)}
                 maxLength={2000}
