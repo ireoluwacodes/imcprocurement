@@ -57,7 +57,7 @@ export type Database = {
           form_id: string
           form_type: string
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: Database["public"]["Enums"]["app_role"] | null
           step_order: number
         }
         Insert: {
@@ -69,7 +69,7 @@ export type Database = {
           form_id: string
           form_type: string
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
+          role?: Database["public"]["Enums"]["app_role"] | null
           step_order?: number
         }
         Update: {
@@ -81,7 +81,7 @@ export type Database = {
           form_id?: string
           form_type?: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: Database["public"]["Enums"]["app_role"] | null
           step_order?: number
         }
         Relationships: []
@@ -186,6 +186,7 @@ export type Database = {
       }
       equipment_substitutions: {
         Row: {
+          approver_id: string | null
           approver_signature: string | null
           approver_signed_at: string | null
           certified: boolean
@@ -209,6 +210,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approver_id?: string | null
           approver_signature?: string | null
           approver_signed_at?: string | null
           certified?: boolean
@@ -232,6 +234,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approver_id?: string | null
           approver_signature?: string | null
           approver_signed_at?: string | null
           certified?: boolean
@@ -427,6 +430,7 @@ export type Database = {
       }
       material_transfers: {
         Row: {
+          approver_id: string | null
           created_at: string
           created_by: string
           custom_fields: Json
@@ -455,6 +459,7 @@ export type Database = {
           vendor_name: string | null
         }
         Insert: {
+          approver_id?: string | null
           created_at?: string
           created_by: string
           custom_fields?: Json
@@ -483,6 +488,7 @@ export type Database = {
           vendor_name?: string | null
         }
         Update: {
+          approver_id?: string | null
           created_at?: string
           created_by?: string
           custom_fields?: Json

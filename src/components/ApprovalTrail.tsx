@@ -2,36 +2,60 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useApprovals } from "@/hooks/useIntegra";
-import { APPROVAL_CHAIN, ROLE_LABELS, DECISION_LABELS, formatDate } from "@/lib/integra";
+import { useApprovals, useCurrentUser, useMyRoles, useTeam } from "@/hooks/useIntegra";
+import { ROLE_LABELS, DECISION_LABELS, formatDate } from "@/lib/integra";
 import { Section } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-export async function createApprovalChain(formType: string, formId: string) {
-  const rows = APPROVAL_CHAIN.map((step, index) => ({
-    form_type: formType,
-    form_id: formId,
-    step_order: index + 1,
-    role: step.role,
-  }));
-  const { error } = await supabase.from("approvals").insert(rows);
+export async function requestApproval(formType: string, formId: string, approverId: string) {
+  const { error } = await supabase
+    .from("approvals")
+    .insert({ form_type: formType, form_id: formId, step_order: 1, assignee_id: approverId });
   if (error) throw error;
 }
 
-export function ApprovalTrail({
-  formType,
-  formId,
-  table,
+export function ApproverSelect({
+  value,
+  onChange,
+  className,
 }: {
-  formType: string;
-  formId: string;
-  table: "purchase_requests" | "equipment_substitutions" | "material_transfers";
+  value: string | null;
+  onChange: (userId: string) => void;
+  className: string;
 }) {
+  const { data: team } = useTeam();
+  return (
+    <select className={className} value={value ?? ""} onChange={(e) => onChange(e.target.value)}>
+      <option value="">Select approver</option>
+      {(team ?? [])
+        .filter((member) => member.is_active !== false)
+        .map((member) => (
+          <option key={member.id} value={member.id}>
+            {`${member.first_name} ${member.last_name}`.trim() || member.email}
+          </option>
+        ))}
+    </select>
+  );
+}
+
+export function ApprovalTrail({ formType, formId }: { formType: string; formId: string }) {
   const { data: steps } = useApprovals(formId);
+  const { data: user } = useCurrentUser();
+  const { data: myRoles } = useMyRoles();
+  const { data: team } = useTeam();
   const queryClient = useQueryClient();
   const [comments, setComments] = useState<Record<string, string>>({});
+
+  const nameOf = (userId: string) => {
+    const person = team?.find((member) => member.id === userId);
+    return person ? `${person.first_name} ${person.last_name}`.trim() || person.email : "Assigned approver";
+  };
+  // Mirrors the approvals_update policy: the assignee, an admin, or (older steps) the role holder.
+  const canDecide = (step: { assignee_id: string | null; role: string | null }) =>
+    Boolean(myRoles?.includes("admin")) ||
+    (step.assignee_id ? step.assignee_id === user?.id : Boolean(step.role && myRoles?.includes(step.role)));
 
   async function decide(stepId: string, decision: string) {
     const { error } = await supabase
@@ -47,42 +71,23 @@ export function ApprovalTrail({
       return;
     }
 
-    const remaining = (steps ?? []).filter((s) => s.id !== stepId && s.decision === "pending");
-    const nextStatus =
-      decision === "rejected"
-        ? "rejected"
-        : decision === "revise_resubmit"
-          ? "revise"
-          : remaining.length === 0
-            ? "approved"
-            : "in_review";
-    await supabase
-      .from(table)
-      .update({ status: nextStatus as never })
-      .eq("id", formId);
-
+    // The database moves the form's status to match the decision.
     toast.success(`Recorded: ${DECISION_LABELS[decision]}`);
     queryClient.invalidateQueries();
   }
 
   if (!steps || steps.length === 0) {
     return (
-      <Section title="Approval routing" description="Submit the form to start the approval chain.">
-        <ol className="space-y-2 text-sm text-muted-foreground">
-          {APPROVAL_CHAIN.map((step, index) => (
-            <li key={step.role}>
-              {index + 1}. {step.label}
-            </li>
-          ))}
-        </ol>
+      <Section title="Approval">
+        <p className="text-sm text-muted-foreground">Submit the form to send it to the selected approver.</p>
       </Section>
     );
   }
 
   return (
     <Section
-      title="Approval routing"
-      description="Superintendent → Executive → Project Manager → Trade Partners → Installation"
+      title="Approval"
+      description="The assigned approver records the decision."
     >
       <ol className="space-y-4">
         {steps.map((step) => (
@@ -90,7 +95,7 @@ export function ApprovalTrail({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-display text-sm uppercase tracking-[0.1em] text-foreground">
-                  {step.step_order}. {ROLE_LABELS[step.role] ?? step.role}
+                  {step.assignee_id ? nameOf(step.assignee_id) : (ROLE_LABELS[step.role ?? ""] ?? step.role)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {step.decided_at ? `Decided ${formatDate(step.decided_at)}` : "Awaiting decision"}
@@ -101,7 +106,7 @@ export function ApprovalTrail({
             {step.comments ? (
               <p className="mt-2 text-sm text-muted-foreground">“{step.comments}”</p>
             ) : null}
-            {step.decision === "pending" ? (
+            {step.decision === "pending" && canDecide(step) ? (
               <div className="mt-3 space-y-2">
                 <Textarea
                   placeholder="Comments (optional)"

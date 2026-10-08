@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useApprovals, useForms } from "@/hooks/useIntegra";
+import { useApprovals, useForms, useTeam } from "@/hooks/useIntegra";
 import { PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ function ApprovalsPage() {
   const { data: prs } = useForms("purchase_requests");
   const { data: subs } = useForms("equipment_substitutions");
   const { data: mtfs } = useForms("material_transfers");
+  const { data: team } = useTeam();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"pending" | "decided" | "all">("all");
 
@@ -48,6 +49,12 @@ function ApprovalsPage() {
     (mtfs ?? []).forEach((r: any) => map.set(r.id, r.mtf_number));
     return map;
   }, [prs, subs, mtfs]);
+
+  const approverOf = (step: { assignee_id: string | null; role: string | null }) => {
+    const member = step.assignee_id ? team?.find((m) => m.id === step.assignee_id) : undefined;
+    if (member) return `${member.first_name} ${member.last_name}`.trim() || member.email;
+    return ROLE_LABELS[step.role ?? ""] ?? step.role ?? "—";
+  };
 
   const rows = (steps ?? [])
     .filter((step) => step.form_type !== "purchase_request")
@@ -60,9 +67,9 @@ function ApprovalsPage() {
     )
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .filter((step) => {
-      const haystack = `${numbers.get(step.form_id) ?? ""} ${TYPE_LABELS[step.form_type] ?? ""} ${
-        ROLE_LABELS[step.role] ?? ""
-      }`.toLowerCase();
+      const haystack = `${numbers.get(step.form_id) ?? ""} ${TYPE_LABELS[step.form_type] ?? ""} ${approverOf(
+        step,
+      )}`.toLowerCase();
       return haystack.includes(query.toLowerCase());
     });
 
@@ -94,7 +101,7 @@ function ApprovalsPage() {
       <div className="panel">
         <div className="border-b border-border p-4">
           <Input
-            placeholder="Search by form number or role…"
+            placeholder="Search by form number or approver…"
             className="max-w-sm"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -104,7 +111,7 @@ function ApprovalsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                {["Form", "Type", "Step", "Assigned role", "Decision", "Decided"].map((header) => (
+                {["Form", "Type", "Step", "Approver", "Decision", "Decided"].map((header) => (
                   <th key={header} className="rule-label px-4 py-3 text-left">
                     {header}
                   </th>
@@ -140,9 +147,7 @@ function ApprovalsPage() {
                       {TYPE_LABELS[step.form_type] ?? step.form_type}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{step.step_order}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {ROLE_LABELS[step.role] ?? step.role}
-                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{approverOf(step)}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={step.decision} kind="decision" />
                     </td>

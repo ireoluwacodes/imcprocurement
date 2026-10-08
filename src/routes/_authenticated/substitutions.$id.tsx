@@ -8,7 +8,7 @@ import { useCurrentUser, useFormFields, useFormRecord, useProjects } from "@/hoo
 import { Section, Field, PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
-import { ApprovalTrail, createApprovalChain } from "@/components/ApprovalTrail";
+import { ApprovalTrail, ApproverSelect, requestApproval } from "@/components/ApprovalTrail";
 import { Attachments } from "@/components/Attachments";
 import { Comments } from "@/components/Comments";
 import { CustomFields, missingCustomField } from "@/components/CustomFields";
@@ -51,6 +51,7 @@ function SubstitutionForm() {
     es_number: generateFormId("ES"),
     project_id: "",
     specified_item: "",
+    approver_id: "",
     custom_fields: {},
     from_equipment: "",
     from_location: "",
@@ -84,6 +85,10 @@ function SubstitutionForm() {
       toast.error("Certify and sign before submitting.");
       return;
     }
+    if (submit && !form.approver_id) {
+      toast.error("Select an approver before submitting.");
+      return;
+    }
     if (submit) {
       const missing = missingCustomField(customFieldDefs, form.custom_fields ?? {});
       if (missing) {
@@ -97,6 +102,7 @@ function SubstitutionForm() {
       custom_fields: form.custom_fields ?? {},
       requester_signed_at: form.requester_signed_at || null,
       approver_signed_at: form.approver_signed_at || null,
+      approver_id: form.approver_id || null,
       status: submit ? "submitted" : form.status,
       created_by: user.id,
     };
@@ -110,7 +116,7 @@ function SubstitutionForm() {
           .select("id")
           .single();
         if (error) throw error;
-        if (submit) await createApprovalChain("equipment_substitution", data.id);
+        if (submit) await requestApproval("equipment_substitution", data.id, form.approver_id);
         toast.success(`${form.es_number} saved`);
         queryClient.invalidateQueries();
         navigate({ to: "/substitutions/$id", params: { id: data.id } });
@@ -120,7 +126,7 @@ function SubstitutionForm() {
           .update(payload as never)
           .eq("id", id);
         if (error) throw error;
-        if (submit) await createApprovalChain("equipment_substitution", id);
+        if (submit) await requestApproval("equipment_substitution", id, form.approver_id);
         toast.success("Substitution updated");
         queryClient.invalidateQueries();
       }
@@ -182,6 +188,13 @@ function SubstitutionForm() {
                 value={form.specified_item ?? ""}
                 onChange={(e) => set("specified_item", e.target.value)}
                 maxLength={160}
+              />
+            </Field>
+            <Field label="Approver">
+              <ApproverSelect
+                className={selectClass}
+                value={form.approver_id}
+                onChange={(value) => set("approver_id", value)}
               />
             </Field>
           </div>
@@ -311,11 +324,7 @@ function SubstitutionForm() {
             />
             <Attachments formType="equipment_substitution" formId={id} />
             <Comments formType="equipment_substitution" formId={id} />
-            <ApprovalTrail
-              formType="Equipment Substitution"
-              formId={id}
-              table="equipment_substitutions"
-            />
+            <ApprovalTrail formType="Equipment Substitution" formId={id} />
           </>
         ) : null}
       </div>

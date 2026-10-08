@@ -8,7 +8,7 @@ import { useCatalog, useCurrentUser, useFormFields, useFormRecord, useForms, use
 import { Section, Field, PageHeader } from "@/components/FormShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SignaturePad } from "@/components/SignaturePad";
-import { ApprovalTrail, createApprovalChain } from "@/components/ApprovalTrail";
+import { ApprovalTrail, ApproverSelect, requestApproval } from "@/components/ApprovalTrail";
 import { Attachments } from "@/components/Attachments";
 import { Comments } from "@/components/Comments";
 import { CustomFields, missingCustomField } from "@/components/CustomFields";
@@ -52,6 +52,7 @@ function MaterialTransferForm() {
     mtf_number: generateFormId("MTF"),
     project_id: "",
     transfer_date: today(),
+    approver_id: "",
     custom_fields: {},
     transfer_type: "From Project",
     to_order_number: "",
@@ -104,6 +105,10 @@ function MaterialTransferForm() {
         toast.error("Received by name and signature are required.");
         return;
       }
+      if (!form.approver_id) {
+        toast.error("Select an approver before submitting.");
+        return;
+      }
       const missing = missingCustomField(customFieldDefs, form.custom_fields ?? {});
       if (missing) {
         toast.error(`${missing} is required.`);
@@ -116,6 +121,7 @@ function MaterialTransferForm() {
       related_pr_id: form.related_pr_id || null,
       received_by_date: form.received_by_date || null,
       transferred_by_date: form.transferred_by_date || null,
+      approver_id: form.approver_id || null,
       line_items: lines,
       custom_fields: form.custom_fields ?? {},
       status: submit ? "submitted" : form.status,
@@ -131,7 +137,7 @@ function MaterialTransferForm() {
           .select("id")
           .single();
         if (error) throw error;
-        if (submit) await createApprovalChain("material_transfer", data.id);
+        if (submit) await requestApproval("material_transfer", data.id, form.approver_id);
         toast.success(`${form.mtf_number} saved`);
         queryClient.invalidateQueries();
         navigate({ to: "/transfers/$id", params: { id: data.id } });
@@ -141,7 +147,7 @@ function MaterialTransferForm() {
           .update(payload as never)
           .eq("id", id);
         if (error) throw error;
-        if (submit) await createApprovalChain("material_transfer", id);
+        if (submit) await requestApproval("material_transfer", id, form.approver_id);
         toast.success("Transfer updated");
         queryClient.invalidateQueries();
       }
@@ -215,6 +221,13 @@ function MaterialTransferForm() {
                   </option>
                 ))}
               </select>
+            </Field>
+            <Field label="Approver">
+              <ApproverSelect
+                className={selectClass}
+                value={form.approver_id}
+                onChange={(value) => set("approver_id", value)}
+              />
             </Field>
             <Field label="Transfer type">
               <select
@@ -458,7 +471,7 @@ function MaterialTransferForm() {
             />
             <Attachments formType="material_transfer" formId={id} />
             <Comments formType="material_transfer" formId={id} />
-            <ApprovalTrail formType="Material Transfer" formId={id} table="material_transfers" />
+            <ApprovalTrail formType="Material Transfer" formId={id} />
           </>
         ) : null}
       </div>

@@ -70,16 +70,22 @@ function ReportsPage() {
     }
     if (report === "cycle") {
       const decided = (steps ?? []).filter((s) => s.decided_at);
-      const byRole = new Map<string, number[]>();
+      // Named approver when assigned, otherwise the role the step was routed to.
+      const approverOf = (s: (typeof decided)[number]) => {
+        const member = s.assignee_id ? (team ?? []).find((m) => m.id === s.assignee_id) : undefined;
+        if (member) return `${member.first_name} ${member.last_name}`.trim() || member.email;
+        return ROLE_LABELS[s.role ?? ""] ?? s.role ?? "—";
+      };
+      const byApprover = new Map<string, number[]>();
       decided.forEach((s) => {
         const hours =
           (new Date(s.decided_at!).getTime() - new Date(s.created_at).getTime()) / 3_600_000;
-        byRole.set(s.role, [...(byRole.get(s.role) ?? []), hours]);
+        byApprover.set(approverOf(s), [...(byApprover.get(approverOf(s)) ?? []), hours]);
       });
       return {
-        headers: ["Role", "Decisions", "Average hours"],
-        rows: Array.from(byRole.entries()).map(([role, hours]) => [
-          ROLE_LABELS[role] ?? role,
+        headers: ["Approver", "Decisions", "Average hours"],
+        rows: Array.from(byApprover.entries()).map(([approver, hours]) => [
+          approver,
           hours.length,
           (hours.reduce((a, b) => a + b, 0) / hours.length).toFixed(1),
         ]),
@@ -95,7 +101,7 @@ function ReportsPage() {
 
     pending.forEach((step) => {
       const owners = (team ?? []).filter((member) =>
-        step.assignee_id ? member.id === step.assignee_id : member.roles.includes(step.role),
+        step.assignee_id ? member.id === step.assignee_id : member.roles.includes(step.role ?? ""),
       );
       owners
         .filter((member) => member.is_active !== false)
@@ -117,7 +123,7 @@ function ReportsPage() {
     const unassigned = pending.filter(
       (step) =>
         !(team ?? []).some((member) =>
-          step.assignee_id ? member.id === step.assignee_id : member.roles.includes(step.role),
+          step.assignee_id ? member.id === step.assignee_id : member.roles.includes(step.role ?? ""),
         ),
     );
 
